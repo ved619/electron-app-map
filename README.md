@@ -2,7 +2,7 @@
 
 An Electron desktop application for pinning locations and exploring nearby markers with **full offline map support**.
 
-## ✨ Features
+## Features
 
 - 📍 **Pin and track locations** with a draggable marker
 - 🔒 **Lock marker** to prevent accidental movement
@@ -11,7 +11,7 @@ An Electron desktop application for pinning locations and exploring nearby marke
 - ⚡ **Fully offline** - works without internet when tiles are bundled
 - 🖥️ **Cross-platform** - Windows, macOS, Linux
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### 1. Install Dependencies
 
@@ -56,28 +56,6 @@ npm run build:win
 
 The built `.exe` will be in the `dist/` folder and will include bundled tiles if present.
 
-## 📦 How It Works
-
-### Offline Map Architecture
-
-```
-┌─────────────────────────────────────────┐
-│         Electron Main Process           │
-│  ┌───────────────────────────────────┐  │
-│  │   Local Tile Server (Port 8754)  │  │
-│  │   Serves tiles from map.mbtiles  │  │
-│  └───────────────────────────────────┘  │
-└─────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────┐
-│        React Renderer Process           │
-│  ┌───────────────────────────────────┐  │
-│  │   Leaflet Map Component           │  │
-│  │   - Auto-detects local tiles      │  │
-│  │   - Falls back to online tiles    │  │
-│  └───────────────────────────────────┘  │
-└─────────────────────────────────────────┘
-```
 
 **Key Components:**
 - **Express server** in Electron main process serves local tiles
@@ -92,7 +70,7 @@ The built `.exe` will be in the `dist/` folder and will include bundled tiles if
 - **Location data:** Browser Geolocation API
 - **Markers:** Generated locally using Haversince distance calculations
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 my-electron-app/
@@ -112,7 +90,7 @@ my-electron-app/
 └── OFFLINE_SETUP.md      # Detailed offline setup guide
 ```
 
-## 🎮 Usage
+## Usage
 
 1. **Get Your Location**: Click "📍 Get Your Location" to center on your current position
 2. **Drag Marker**: Click and drag the red marker to any location
@@ -132,18 +110,10 @@ The default map covers the area and zoom levels in your `map.mbtiles` file. See 
 - Geographic coverage options
 - File size guidelines
 
-## 📤 Distribution
-
-When you build with `npm run build:win`, the output includes:
-- ✅ Complete Electron app
-- ✅ React frontend (bundled)
-- ✅ Map tiles (if present in `tiles/`)
-- ✅ Local tile server
-- ✅ All dependencies
 
 **Result:** A single `.exe` that works completely offline!
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Map shows gray tiles
 - **Problem:** Tiles not loading
@@ -165,22 +135,12 @@ When you build with `npm run build:win`, the output includes:
   - Verify `tiles/*.mbtiles` is present before building
   - Check `package.json` build config includes `"tiles/**/*"`
 
-## 📋 Requirements
+## Requirements
 
 - Node.js 16+ 
 - npm or yarn
 - Windows 10+ (for Windows builds)
 
-## 🙏 Acknowledgments
-
-- **OpenStreetMap** for map data
-- **Leaflet** for map rendering
-- **React-Leaflet** for React integration
-- **Electron** for desktop app framework
-
-## 📄 License
-
-Map data © OpenStreetMap contributors
 
 ## 🆘 Need Help?
 
