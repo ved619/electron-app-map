@@ -83,7 +83,7 @@ my-electron-app/
 │   │   └── main.tsx      # React entry point
 │   └── package.json
 ├── tiles/
-│   └── map.mbtiles       # Offline map tiles (you provide)
+│   └── new_delhi_map.mbtiles  # Offline map tiles - New Delhi region
 ├── scripts/
 │   └── download-tiles.js # Tile setup helper
 ├── package.json          # Main package file
@@ -105,7 +105,7 @@ The local tile server runs on port `8754`. To change this, edit:
 - [electron/main.js](electron/main.js) - Line with `const PORT = 8754`
 
 ### Tile Coverage
-The default map covers the area and zoom levels in your `map.mbtiles` file. See [OFFLINE_SETUP.md](OFFLINE_SETUP.md) for:
+The default map covers the New Delhi region from `new_delhi_map.mbtiles`. See [OFFLINE_SETUP.md](OFFLINE_SETUP.md) for:
 - Recommended zoom levels
 - Geographic coverage options
 - File size guidelines
@@ -120,7 +120,7 @@ The default map covers the area and zoom levels in your `map.mbtiles` file. See 
 - **Solution:** 
   - Run `npm run check-tiles` to verify tiles are present
   - Check console for tile server errors
-  - Ensure `map.mbtiles` is in the correct location
+  - Ensure `new_delhi_map.mbtiles` is in the correct location
 
 ### "Tile not found" errors
 - **Problem:** Tiles missing for current zoom/location

@@ -46,14 +46,11 @@ function MapContent({
   const mainMarkerRef = useRef<maplibregl.Marker | null>(null)
   const randomMarkersRef = useRef<maplibregl.Marker[]>([])
 
-  // Use local tiles if available (Electron), fallback to online tiles
-  const isElectron = typeof window !== 'undefined' && (window as any).electronAPI?.isElectron
-  const tileUrl = isElectron
-    ? 'http://127.0.0.1:8754/tiles/{z}/{x}/{y}.png'
-    : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+  // Use local tiles from mbtiles
+  const tileUrl = 'http://127.0.0.1:8754/tiles/{z}/{x}/{y}.pbf'
 
   const roadLineWidth = useMemo(
-    () => ['interpolate', ['linear'], ['zoom'], 5, 0.3, 10, 1, 13, 2] as any,
+    () => ['interpolate', ['linear'], ['zoom'], 18, 0.6, 19, 1.2, 20, 2.2] as any,
     []
   )
 
@@ -63,8 +60,8 @@ function MapContent({
       osm: {
         type: 'vector' as const,
         tiles: [tileUrl],
-        minzoom: 0,
-        maxzoom: 14
+        minzoom: 18,
+        maxzoom: 20
       }
     },
     layers: [
@@ -74,49 +71,36 @@ function MapContent({
         paint: { 'background-color': '#f3f6f4' }
       },
       {
-        id: 'water',
+        id: 'buildings',
         type: 'fill' as const,
         source: 'osm',
-        'source-layer': 'water',
-        paint: { 'fill-color': '#b7d9ee' }
-      },
-      {
-        id: 'landuse',
-        type: 'fill' as const,
-        source: 'osm',
-        'source-layer': 'landuse',
-        paint: { 'fill-color': '#e7efe1' }
-      },
-      {
-        id: 'park',
-        type: 'fill' as const,
-        source: 'osm',
-        'source-layer': 'park',
-        paint: { 'fill-color': '#d6ecd0' }
-      },
-      {
-        id: 'landcover',
-        type: 'fill' as const,
-        source: 'osm',
-        'source-layer': 'landcover',
-        paint: { 'fill-color': '#eef2e6' }
+        'source-layer': 'newDelhi',
+        paint: {
+          'fill-color': '#e0ddd9',
+          'fill-opacity': 0.8
+        }
       },
       {
         id: 'roads',
         type: 'line' as const,
         source: 'osm',
-        'source-layer': 'transportation',
+        'source-layer': 'newDelhi',
+        filter: ['has', 'highway'],
         paint: {
-          'line-color': '#9aa3a7',
-          'line-width': roadLineWidth
+          'line-color': '#ffffff',
+          'line-width': roadLineWidth,
+          'line-opacity': 0.9
         }
       },
       {
-        id: 'buildings',
-        type: 'fill' as const,
+        id: 'buildings-outline',
+        type: 'line' as const,
         source: 'osm',
-        'source-layer': 'building',
-        paint: { 'fill-color': '#d7d3cc' }
+        'source-layer': 'newDelhi',
+        paint: {
+          'line-color': '#b0ada8',
+          'line-width': 1
+        }
       }
     ]
   }), [tileUrl, roadLineWidth])
@@ -130,7 +114,9 @@ function MapContent({
       container: mapContainerRef.current,
       style: mapStyle,
       center: [longitude, latitude],
-      zoom: 5,
+      zoom: 18,
+      minZoom: 18,
+      maxZoom: 20,
       attributionControl: { compact: true }
     })
 
@@ -238,8 +224,8 @@ function MapContent({
 }
 
 function App() {
-  const [latitude, setLatitude] = useState(20.5937)
-  const [longitude, setLongitude] = useState(78.9629)
+  const [latitude, setLatitude] = useState(28.4452)
+  const [longitude, setLongitude] = useState(77.0555)
   const [shouldPanTo, setShouldPanTo] = useState(false)
   const [randomMarkers, setRandomMarkers] = useState<MarkerData[]>([])
   const [isLocked, setIsLocked] = useState(false)
