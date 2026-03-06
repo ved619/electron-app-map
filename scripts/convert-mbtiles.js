@@ -55,7 +55,8 @@ console.log('This may take several minutes depending on the tile count...');
 console.log('');
 
 try {
-  // Create output directory if it doesn't exist  if (!fs.existsSync(outputDir)) {
+  // Create output directory if it doesn't exist
+  if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
 

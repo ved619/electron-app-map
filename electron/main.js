@@ -2,40 +2,62 @@ const { app, BrowserWindow } = require("electron");
 const path = require("path");
 const express = require("express");
 const fs = require("fs");
+const initSqlJs = require("sql.js");
 
 const isDev = !app.isPackaged;
 let tileServer = null;
+let db = null;
 
-// Start local tile server
-function startTileServer() {
+// Start local tile server serving tiles from .mbtiles file
+async function startTileServer() {
   const tileApp = express();
-  const PORT = 8754; // Local port for tile server
+  const PORT = 8754;
 
-  // Path to tiles directory (folder structure: tiles/z/x/y.png)
-  const tilesDir = isDev
-    ? path.join(__dirname, "../tiles")
-    : path.join(process.resourcesPath, "tiles");
+  const mbtilesPath = isDev
+    ? path.join(__dirname, "../newDelhi.mbtiles")
+    : path.join(process.resourcesPath, "newDelhi.mbtiles");
 
-  // Check if tiles directory exists
-  if (!fs.existsSync(tilesDir)) {
-    console.warn("Tiles directory not found at:", tilesDir);
-    console.warn("App will fall back to online tiles.");
+  if (!fs.existsSync(mbtilesPath)) {
+    console.warn("MBTiles file not found at:", mbtilesPath);
     return null;
   }
 
   try {
-    // Serve static tiles from filesystem
-    // Expected structure: tiles/{z}/{x}/{y}.png (actually gzipped vector tiles)
-    tileApp.get("/tiles/:z/:x/:y.png", (req, res) => {
-      const { z, x, y } = req.params;
-      const tilePath = path.join(tilesDir, z, x, `${y}.png`);
-      
-      if (fs.existsSync(tilePath)) {
-        res.set("Access-Control-Allow-Origin", "*");
+    const SQL = await initSqlJs();
+    const buffer = fs.readFileSync(mbtilesPath);
+    db = new SQL.Database(buffer);
+
+    // Enable CORS for all routes
+    tileApp.use((req, res, next) => {
+      res.set("Access-Control-Allow-Origin", "*");
+      res.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+      res.set("Access-Control-Allow-Headers", "Content-Type");
+      if (req.method === "OPTIONS") {
+        res.sendStatus(200);
+      } else {
+        next();
+      }
+    });
+
+    tileApp.get("/tiles/:z/:x/:y.pbf", (req, res) => {
+      const z = parseInt(req.params.z, 10);
+      const x = parseInt(req.params.x, 10);
+      const y = parseInt(req.params.y, 10);
+
+      // Convert XYZ y to TMS y (flip vertically)
+      const tmsY = Math.pow(2, z) - 1 - y;
+
+      const result = db.exec(
+        "SELECT tile_data FROM tiles WHERE zoom_level = ? AND tile_column = ? AND tile_row = ?",
+        [z, x, tmsY]
+      );
+
+      if (result.length > 0 && result[0].values.length > 0) {
+        const tileData = result[0].values[0][0];
         res.set("Content-Type", "application/vnd.mapbox-vector-tile");
         res.set("Content-Encoding", "gzip");
-        res.set("Cache-Control", "public, max-age=86400"); // Cache for 1 day
-        res.sendFile(tilePath);
+        res.set("Cache-Control", "public, max-age=86400");
+        res.send(Buffer.from(tileData));
       } else {
         res.status(404).send("Tile not found");
       }
@@ -43,7 +65,7 @@ function startTileServer() {
 
     tileServer = tileApp.listen(PORT, "127.0.0.1", () => {
       console.log(`Tile server running on http://127.0.0.1:${PORT}`);
-      console.log(`Serving tiles from: ${tilesDir}`);
+      console.log(`Serving tiles from: ${mbtilesPath}`);
     });
 
     return tileServer;
@@ -74,13 +96,16 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(() => {
-  startTileServer();
+app.whenReady().then(async () => {
+  await startTileServer();
   createWindow();
 });
 
 app.on("before-quit", () => {
   if (tileServer) {
     tileServer.close();
+  }
+  if (db) {
+    db.close();
   }
 });
