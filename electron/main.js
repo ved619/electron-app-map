@@ -5,17 +5,37 @@ const fs = require("fs");
 const initSqlJs = require("sql.js");
 
 const isDev = !app.isPackaged;
+const TILE_SERVER_PORT = 8754;
+const MBTILES_FILE_NAME = "satellite_gurgaon.mbtiles";
+const TILE_QUERY =
+  "SELECT tile_data FROM tiles WHERE zoom_level = ? AND tile_column = ? AND tile_row = ?";
+
 let tileServer = null;
 let db = null;
+
+function resolveMbtilesPath() {
+  return isDev
+    ? path.join(__dirname, `../${MBTILES_FILE_NAME}`)
+    : path.join(process.resourcesPath, MBTILES_FILE_NAME);
+}
+
+function xyzToTmsY(z, y) {
+  return Math.pow(2, z) - 1 - y;
+}
+
+function fetchTileData(z, x, y) {
+  const tmsY = xyzToTmsY(z, y);
+  const result = db.exec(TILE_QUERY, [z, x, tmsY]);
+  if (result.length === 0 || result[0].values.length === 0) {
+    return null;
+  }
+  return result[0].values[0][0];
+}
 
 // Start local tile server serving tiles from .mbtiles file
 async function startTileServer() {
   const tileApp = express();
-  const PORT = 8754;
-
-  const mbtilesPath = isDev
-    ? path.join(__dirname, "../newDelhi.mbtiles")
-    : path.join(process.resourcesPath, "newDelhi.mbtiles");
+  const mbtilesPath = resolveMbtilesPath();
 
   if (!fs.existsSync(mbtilesPath)) {
     console.warn("MBTiles file not found at:", mbtilesPath);
@@ -39,23 +59,20 @@ async function startTileServer() {
       }
     });
 
-    tileApp.get("/tiles/:z/:x/:y.pbf", (req, res) => {
+    tileApp.get("/tiles/:z/:x/:y.jpg", (req, res) => {
       const z = parseInt(req.params.z, 10);
       const x = parseInt(req.params.x, 10);
       const y = parseInt(req.params.y, 10);
 
-      // Convert XYZ y to TMS y (flip vertically)
-      const tmsY = Math.pow(2, z) - 1 - y;
+      if (!Number.isInteger(z) || !Number.isInteger(x) || !Number.isInteger(y)) {
+        res.status(400).send("Invalid tile coordinates");
+        return;
+      }
 
-      const result = db.exec(
-        "SELECT tile_data FROM tiles WHERE zoom_level = ? AND tile_column = ? AND tile_row = ?",
-        [z, x, tmsY]
-      );
+      const tileData = fetchTileData(z, x, y);
 
-      if (result.length > 0 && result[0].values.length > 0) {
-        const tileData = result[0].values[0][0];
-        res.set("Content-Type", "application/vnd.mapbox-vector-tile");
-        res.set("Content-Encoding", "gzip");
+      if (tileData) {
+        res.set("Content-Type", "image/jpeg");
         res.set("Cache-Control", "public, max-age=86400");
         res.send(Buffer.from(tileData));
       } else {
@@ -63,8 +80,8 @@ async function startTileServer() {
       }
     });
 
-    tileServer = tileApp.listen(PORT, "127.0.0.1", () => {
-      console.log(`Tile server running on http://127.0.0.1:${PORT}`);
+    tileServer = tileApp.listen(TILE_SERVER_PORT, "127.0.0.1", () => {
+      console.log(`Tile server running on http://127.0.0.1:${TILE_SERVER_PORT}`);
       console.log(`Serving tiles from: ${mbtilesPath}`);
     });
 
