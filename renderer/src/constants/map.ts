@@ -1,7 +1,21 @@
-export const TILE_URL = 'http://127.0.0.1:8754/tiles/{z}/{x}/{y}.jpg'
-export const MAP_MIN_ZOOM = 15
-export const MAP_MAX_ZOOM = 19
-export const MAP_INITIAL_ZOOM = 16
+const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY?.trim() || ''
+
+export const HAS_MAPTILER_KEY = MAPTILER_KEY.length > 0
+
+export const MAP_STYLE_URL = HAS_MAPTILER_KEY
+  ? `https://api.maptiler.com/maps/satellite/style.json?key=${MAPTILER_KEY}`
+  : ''
+
+export const TERRAIN_DEM_URL = HAS_MAPTILER_KEY
+  ? `https://api.maptiler.com/tiles/terrain-rgb-v2/{z}/{x}/{y}.webp?key=${MAPTILER_KEY}`
+  : ''
+
+export const MAP_MIN_ZOOM = 2
+export const MAP_MAX_ZOOM = 18
+export const MAP_INITIAL_ZOOM = 14
+export const MAP_INITIAL_PITCH = 55
+export const MAP_INITIAL_BEARING = -20
+export const TERRAIN_EXAGGERATION = 1.3
 
 export const MAIN_MARKER_SVG =
   'data:image/svg+xml;utf8,' +

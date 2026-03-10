@@ -39,6 +39,21 @@ Follow the instructions in [OFFLINE_SETUP.md](OFFLINE_SETUP.md) to download tile
 
 ### 3. Run in Development
 
+Set up your online 3D map key first:
+
+```bash
+cd renderer
+copy .env.example .env.local
+```
+
+Then edit `renderer/.env.local` and set:
+
+```bash
+VITE_MAPTILER_KEY=your_maptiler_key_here
+```
+
+You can create a free MapTiler key at: https://www.maptiler.com/cloud/
+
 ```bash
 npm start
 ```
@@ -65,7 +80,7 @@ The built `.exe` will be in the `dist/` folder and will include bundled tiles if
 
 ### Map Data Source
 
-- **Online mode:** OpenStreetMap tiles (https://tile.openstreetmap.org)
+- **Online mode:** MapTiler satellite style + terrain DEM (3D terrain)
 - **Offline mode:** Bundled MBTiles file served locally
 - **Location data:** Browser Geolocation API
 - **Markers:** Generated locally using Haversince distance calculations

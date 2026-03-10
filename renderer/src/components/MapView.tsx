@@ -1,11 +1,16 @@
-import { useEffect, useMemo, useRef } from 'react'
-import maplibregl, { type StyleSpecification } from 'maplibre-gl'
+import { useEffect, useRef, useState } from 'react'
+import maplibregl from 'maplibre-gl'
 import {
+  HAS_MAPTILER_KEY,
+  MAP_INITIAL_BEARING,
+  MAP_INITIAL_PITCH,
   MAIN_MARKER_SVG,
   MAP_INITIAL_ZOOM,
   MAP_MAX_ZOOM,
   MAP_MIN_ZOOM,
-  TILE_URL
+  MAP_STYLE_URL,
+  TERRAIN_DEM_URL,
+  TERRAIN_EXAGGERATION
 } from '../constants/map'
 import type { Coordinates, MapBounds, MarkerData } from '../types/map'
 
@@ -36,48 +41,48 @@ export function MapView({
   const mapRef = useRef<maplibregl.Map | null>(null)
   const mainMarkerRef = useRef<maplibregl.Marker | null>(null)
   const randomMarkersRef = useRef<maplibregl.Marker[]>([])
-
-  const mapStyle = useMemo<StyleSpecification>(() => ({
-    version: 8 as const,
-    sources: {
-      satellite: {
-        type: 'raster' as const,
-        tiles: [TILE_URL],
-        tileSize: 256,
-        minzoom: MAP_MIN_ZOOM,
-        maxzoom: MAP_MAX_ZOOM
-      }
-    },
-    layers: [
-      {
-        id: 'satellite',
-        type: 'raster' as const,
-        source: 'satellite',
-        paint: {}
-      }
-    ]
-  }), [])
+  const [mapError, setMapError] = useState<string | null>(
+    HAS_MAPTILER_KEY ? null : 'MapTiler key missing. Set VITE_MAPTILER_KEY in renderer/.env.local.'
+  )
 
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) {
+    if (!mapContainerRef.current || mapRef.current || !HAS_MAPTILER_KEY) {
       return
     }
 
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
-      style: mapStyle,
+      style: MAP_STYLE_URL,
       center: [longitude, latitude],
       zoom: MAP_INITIAL_ZOOM,
+      pitch: MAP_INITIAL_PITCH,
+      bearing: MAP_INITIAL_BEARING,
       minZoom: MAP_MIN_ZOOM,
       maxZoom: MAP_MAX_ZOOM,
       attributionControl: { compact: true }
     })
 
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
+    map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-right')
+
+    map.on('load', () => {
+      if (!map.getSource('terrain-dem')) {
+        map.addSource('terrain-dem', {
+          type: 'raster-dem',
+          tiles: [TERRAIN_DEM_URL],
+          tileSize: 256,
+          maxzoom: 14,
+          encoding: 'mapbox'
+        })
+      }
+
+      map.setTerrain({ source: 'terrain-dem', exaggeration: TERRAIN_EXAGGERATION })
+      setMapError(null)
+    })
 
     map.on('error', (event) => {
       const message = event?.error?.message || event?.error || event
       console.error('MapLibre error:', message)
+      setMapError('Unable to load map or terrain data. Check internet and MapTiler key.')
     })
 
     const emitBounds = () => {
@@ -119,7 +124,7 @@ export function MapView({
       mapRef.current = null
       mainMarkerRef.current = null
     }
-  }, [latitude, longitude, onBoundsChanged, onMarkerDragged, mapStyle, isLocked])
+  }, [latitude, longitude, onBoundsChanged, onMarkerDragged, isLocked])
 
   useEffect(() => {
     if (!mapRef.current || !mainMarkerRef.current) {
@@ -160,6 +165,7 @@ export function MapView({
   return (
     <>
       <div className="map-canvas maplibre-map" ref={mapContainerRef} />
+      {mapError && <div className="map-error-banner">{mapError}</div>}
       <button
         className={`lock-button ${isLocked ? 'locked' : ''}`}
         onClick={onToggleLock}

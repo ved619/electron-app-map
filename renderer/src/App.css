@@ -143,6 +143,22 @@
   height: 100%;
 }
 
+.map-error-banner {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 1001;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #f5c2c7;
+  background: rgba(132, 32, 41, 0.92);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+}
+
 .main-marker {
   width: 32px;
   height: 48px;
