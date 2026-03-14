@@ -2,18 +2,24 @@ type CoordinatesBarProps = {
   latitude: number
   longitude: number
   markerIntervalInput: string
+  isLocating: boolean
+  locationStatus: string | null
   onLatitudeChange: (value: number) => void
   onLongitudeChange: (value: number) => void
   onIntervalChange: (value: string) => void
+  onGetCurrentLocation: () => void
 }
 
 export function CoordinatesBar({
   latitude,
   longitude,
   markerIntervalInput,
+  isLocating,
+  locationStatus,
   onLatitudeChange,
   onLongitudeChange,
-  onIntervalChange
+  onIntervalChange,
+  onGetCurrentLocation
 }: CoordinatesBarProps) {
   return (
     <div className="coordinates-bar">
@@ -46,6 +52,15 @@ export function CoordinatesBar({
           step="0.1"
           placeholder="5"
         />
+        <button
+          type="button"
+          className="get-location-button"
+          onClick={onGetCurrentLocation}
+          disabled={isLocating}
+        >
+          {isLocating ? 'Locating...' : 'Get Location'}
+        </button>
+        {locationStatus && <span className="location-status">{locationStatus}</span>}
       </div>
     </div>
   )

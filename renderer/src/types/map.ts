@@ -2,6 +2,7 @@ export type MarkerData = {
   id: number
   lat: number
   lng: number
+  alt: number
 }
 
 export type Coordinates = {

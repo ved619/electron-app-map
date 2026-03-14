@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useMemo, useState, type RefObject } from 'react'
+import { RANDOM_MARKER_ALTITUDE_MAX_M, RANDOM_MARKER_ALTITUDE_MIN_M } from '../constants/map'
 import type { MapBounds, MarkerData } from '../types/map'
 
 const MAX_RANDOM_DISTANCE_KM = 10
 const MAX_COORD_ATTEMPTS = 25
 
 const createMarkerId = () => Date.now() + Math.random()
+
+const getRandomAltitude = () =>
+  RANDOM_MARKER_ALTITUDE_MIN_M +
+  Math.random() * (RANDOM_MARKER_ALTITUDE_MAX_M - RANDOM_MARKER_ALTITUDE_MIN_M)
 
 const getDistanceKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
   const earthRadiusKm = 6371
@@ -51,7 +56,8 @@ export function useRandomMarkers({
       return {
         id: createMarkerId(),
         lat: latitude,
-        lng: longitude
+        lng: longitude,
+        alt: getRandomAltitude()
       }
     }
 
@@ -64,7 +70,8 @@ export function useRandomMarkers({
         return {
           id: createMarkerId(),
           lat,
-          lng
+          lng,
+          alt: getRandomAltitude()
         }
       }
     }
@@ -72,7 +79,8 @@ export function useRandomMarkers({
     return {
       id: createMarkerId(),
       lat: latitude,
-      lng: longitude
+      lng: longitude,
+      alt: getRandomAltitude()
     }
   }, [latitude, longitude, mapBoundsRef])
 

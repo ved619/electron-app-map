@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, session } = require("electron");
 const path = require("path");
 const express = require("express");
 const fs = require("fs");
@@ -114,6 +114,21 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
+  session.defaultSession.setPermissionCheckHandler((webContents, permission) => {
+    if (permission === "geolocation") {
+      return true;
+    }
+    return false;
+  });
+
+  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    if (permission === "geolocation") {
+      callback(true);
+      return;
+    }
+    callback(false);
+  });
+
   await startTileServer();
   createWindow();
 });
